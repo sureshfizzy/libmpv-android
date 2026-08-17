@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "dev.jdtech.mpv"
+    namespace = "org.jellycine.mpv"
     compileSdk = 36
     buildToolsVersion = "37.0.0"
     ndkVersion = "29.0.14206865"
@@ -53,7 +53,7 @@ mavenPublishing {
     )
 
     coordinates(
-        groupId = "dev.jdtech.mpv",
+        groupId = "org.jellycine.mpv",
         artifactId = "libmpv",
         version = "1.0.0"
     )
@@ -61,29 +61,28 @@ mavenPublishing {
     pom {
         name = "libmpv-android"
         description = "libmpv for Android"
-        inceptionYear = "2023"
-        url = "https://github.com/jarnedemeulemeester/libmpv-android"
+        inceptionYear = "2025"
+        url = "https://github.com/sureshfizzy/libmpv-android"
         licenses {
             license {
                 name = "MIT license"
-                url = "https://github.com/jarnedemeulemeester/libmpv-android/blob/main/LICENSE"
+                url = "https://github.com/sureshfizzy/libmpv-android/blob/main/LICENSE"
             }
         }
         developers {
             developer {
-                id = "jarnedemeulemeester"
-                name = "Jarne Demeulemeester"
-                email = "jarnedemeulemeester@gmail.com"
+                id = "jellycine"
+                name = "JellyCine"
             }
         }
         scm {
-            url = "https://github.com/jarnedemeulemeester/libmpv-android.git"
-            connection = "scm:git@github.com:jarnedemeulemeester/libmpv-android.git"
-            developerConnection = "scm:git@github.com:jarnedemeulemeester/libmpv-android.git"
+            url = "https://github.com/sureshfizzy/libmpv-android.git"
+            connection = "scm:git@github.com:sureshfizzy/libmpv-android.git"
+            developerConnection = "scm:git@github.com:sureshfizzy/libmpv-android.git"
         }
         issueManagement {
             system = "GitHub"
-            url = "https://github.com/jarnedemeulemeester/libmpv-android/issues"
+            url = "https://github.com/sureshfizzy/libmpv-android/issues"
         }
     }
 }

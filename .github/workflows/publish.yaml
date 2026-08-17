@@ -10,7 +10,7 @@ jobs:
     name: Publish
     runs-on: ubuntu-latest
     environment: release
-    if: ${{ contains(github.repository_owner, 'jarnedemeulemeester') || startsWith(github.ref, 'refs/tags/v') }}
+    if: ${{ contains(github.repository_owner, 'sureshfizzy') || startsWith(github.ref, 'refs/tags/v') }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
