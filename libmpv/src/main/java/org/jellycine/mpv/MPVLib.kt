@@ -1,4 +1,4 @@
-package dev.jdtech.mpv
+package org.jellycine.mpv
 
 import android.content.Context
 import android.view.Surface

@@ -1,1 +1,1 @@
--keep class dev.jdtech.mpv.MPVLib { *; }
+-keep class org.jellycine.mpv.MPVLib { *; }
