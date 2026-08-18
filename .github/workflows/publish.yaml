@@ -1,16 +1,16 @@
-name: Publish
+name: Build & Publish
 
 on:
+  workflow_dispatch:
   push:
     tags:
-      - v*
+      - 'v*'
 
 jobs:
-  publish:
-    name: Publish
+  build:
+    name: Build
     runs-on: ubuntu-latest
-    environment: release
-    if: ${{ contains(github.repository_owner, 'sureshfizzy') || startsWith(github.ref, 'refs/tags/v') }}
+    if: ${{ github.repository_owner == 'sureshfizzy' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -49,6 +49,37 @@ jobs:
       - name: Build
         working-directory: ./buildscripts
         run: ./build.sh
+
+      - name: Upload AAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libmpv-release
+          path: ./libmpv/build/outputs/aar/libmpv-release.aar
+
+  publish:
+    name: Publish to Maven Central
+    needs: build
+    runs-on: ubuntu-latest
+    environment: release
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Download AAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: libmpv-release
+          path: ./libmpv/build/outputs/aar/
 
       - name: Publish
         run: ./gradlew publishToMavenCentral --no-configuration-cache
