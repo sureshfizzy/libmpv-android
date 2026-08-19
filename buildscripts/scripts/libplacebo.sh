@@ -21,6 +21,6 @@ meson setup $build --cross-file "$prefix_dir"/crossfile.txt \
 ninja -C $build -j$cores
 DESTDIR="$prefix_dir" ninja -C $build install
 
-# add missing library for static linking
+# add missing libraries for static linking
 # this isn't "-lstdc++" due to a meson bug: https://github.com/mesonbuild/meson/issues/11300
-${SED:-sed} '/^Libs:/ s|$| -lc++|' "$prefix_dir/lib/pkgconfig/libplacebo.pc" -i
+${SED:-sed} '/^Libs:/ s|$| -lc++ -lshaderc_combined|' "$prefix_dir/lib/pkgconfig/libplacebo.pc" -i
