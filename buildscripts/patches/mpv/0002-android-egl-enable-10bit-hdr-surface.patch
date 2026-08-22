@@ -1,0 +1,42 @@
+diff --git a/video/out/opengl/context_android.c b/video/out/opengl/context_android.c
+index 0a12cf8..f8a2b1c 100644
+--- a/video/out/opengl/context_android.c
++++ b/video/out/opengl/context_android.c
+@@ -17,12 +17,18 @@
+
+ #include <EGL/egl.h>
+ #include <EGL/eglext.h>
++#include <android/native_window.h>
+
+ #include "video/out/android_common.h"
+ #include "egl_helpers.h"
+ #include "common/common.h"
+ #include "context.h"
+
++// AHARDWAREBUFFER_FORMAT_R10G10B10A2_UNORM / WINDOW_FORMAT_RGBA_1010102
++#define WINDOW_FORMAT_10BIT 43
++
+ struct priv {
+     struct GL gl;
+     EGLDisplay egl_display;
+@@ -72,7 +78,7 @@ static bool android_init(struct ra_ctx *ctx)
+     ANativeWindow *native_window = vo_android_native_window(ctx->vo);
+     EGLint format;
+     eglGetConfigAttrib(p->egl_display, config, EGL_NATIVE_VISUAL_ID, &format);
+-    ANativeWindow_setBuffersGeometry(native_window, 0, 0, format);
++    ANativeWindow_setBuffersGeometry(native_window, 0, 0, 0);
+
+     p->egl_surface = eglCreateWindowSurface(p->egl_display, config,
+                                     (EGLNativeWindowType)native_window, NULL);
+@@ -112,8 +118,9 @@ static bool android_reconfig(struct ra_ctx *ctx)
+     // Update window geometry to prevent screen tearing
+     ANativeWindow *native_window = vo_android_native_window(ctx->vo);
+     if (native_window) {
+-        int32_t current_format = ANativeWindow_getFormat(native_window);
+-        ANativeWindow_setBuffersGeometry(native_window, w, h, current_format);
++        // Pass 0 as format to avoid overriding the EGL surface's chosen
++        // format (which may be 10-bit for HDR content).
++        ANativeWindow_setBuffersGeometry(native_window, w, h, 0);
+     }
+
+     ctx->vo->dwidth = w;

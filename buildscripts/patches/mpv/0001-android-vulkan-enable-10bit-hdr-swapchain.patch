@@ -1,27 +1,21 @@
+diff --git a/video/out/vulkan/context_android.c b/video/out/vulkan/context_android.c
+index 512830d..5f2c4a5 100644
 --- a/video/out/vulkan/context_android.c
 +++ b/video/out/vulkan/context_android.c
-@@ -17,6 +17,7 @@
-
- #include <vulkan/vulkan.h>
- #include <vulkan/vulkan_android.h>
-+#include <android/native_window.h>
-
- #include "video/out/android_common.h"
- #include "common.h"
-@@ -27,6 +28,9 @@ struct priv {
+@@ -27,6 +27,9 @@ struct priv {
      struct mpvk_ctx vk;
  };
-
+ 
 +// AHARDWAREBUFFER_FORMAT_R10G10B10A2_UNORM / WINDOW_FORMAT_RGBA_1010102
 +#define WINDOW_FORMAT_10BIT 43
 +
  static void android_uninit(struct ra_ctx *ctx)
  {
      struct priv *p = ctx->priv;
-@@ -47,6 +51,10 @@ static bool android_init(struct ra_ctx *ctx)
+@@ -48,6 +51,11 @@ static bool android_init(struct ra_ctx *ctx)
      if (!mpvk_init(vk, ctx, VK_KHR_ANDROID_SURFACE_EXTENSION_NAME))
          goto fail;
-
+ 
 +    // Set 10-bit buffer format on the native window before creating the
 +    // Vulkan surface. This signals the compositor to expose HDR-capable
 +    // color spaces in vkGetPhysicalDeviceSurfaceFormatsKHR.
@@ -30,7 +24,7 @@
      VkAndroidSurfaceCreateInfoKHR info = {
           .sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR,
           .window = vo_android_native_window(ctx->vo)
-@@ -73,8 +81,9 @@ static bool android_reconfig(struct ra_ctx *ctx)
+@@ -80,8 +88,9 @@ static bool android_reconfig(struct ra_ctx *ctx)
      // Update window geometry to prevent screen tearing
      ANativeWindow *native_window = vo_android_native_window(ctx->vo);
      if (native_window) {
@@ -40,5 +34,5 @@
 +        // chosen format (which may be 10-bit for HDR content).
 +        ANativeWindow_setBuffersGeometry(native_window, w, h, 0);
      }
-
+ 
      ra_vk_ctx_resize(ctx, w, h);
