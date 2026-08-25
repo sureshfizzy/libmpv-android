@@ -1,14 +1,29 @@
 #include <jni.h>
+#include <dlfcn.h>
 
+#include <android/native_window.h>
+#include <android/native_window_jni.h>
 #include <mpv/client.h>
 
 #include "jni_utils.h"
 #include "log.h"
 #include "globals.h"
 
+typedef int (*pfn_ANativeWindow_setBuffersDataSpace)(ANativeWindow*, int);
+static pfn_ANativeWindow_setBuffersDataSpace fn_setBuffersDataSpace = nullptr;
+static bool fn_resolved = false;
+
+static void resolve_setBuffersDataSpace() {
+    if (fn_resolved) return;
+    fn_resolved = true;
+    fn_setBuffersDataSpace = (pfn_ANativeWindow_setBuffersDataSpace)
+        dlsym(RTLD_DEFAULT, "ANativeWindow_setBuffersDataSpace");
+}
+
 extern "C" {
     jni_func(void, nativeAttachSurface, jlong instance, jobject surface);
     jni_func(void, nativeDetachSurface, jlong instance);
+    jni_func(void, nativeSetSurfaceDataSpace, jlong instance, jint dataSpace);
 }
 
 jni_func(void, nativeAttachSurface, jlong instance, jobject surface) {
@@ -35,4 +50,20 @@ jni_func(void, nativeDetachSurface, jlong instance) {
 
     env->DeleteGlobalRef(mpv_instance->surface);
     mpv_instance->surface = nullptr;
+}
+
+jni_func(void, nativeSetSurfaceDataSpace, jlong instance, jint dataSpace) {
+    auto mpv_instance = reinterpret_cast<MPVInstance*>(instance);
+    if (!mpv_instance->surface)
+        return;
+
+    resolve_setBuffersDataSpace();
+    if (!fn_setBuffersDataSpace)
+        return;
+
+    ANativeWindow *window = ANativeWindow_fromSurface(env, mpv_instance->surface);
+    if (window) {
+        fn_setBuffersDataSpace(window, dataSpace);
+        ANativeWindow_release(window);
+    }
 }

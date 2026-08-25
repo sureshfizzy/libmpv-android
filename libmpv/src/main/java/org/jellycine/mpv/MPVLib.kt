@@ -67,6 +67,12 @@ class MPVLib private constructor(nativePtr: Long) {
     }
     private external fun nativeDetachSurface(instance: Long)
 
+    fun setSurfaceDataSpace(dataSpace: Int) {
+        checkCreated()
+        nativeSetSurfaceDataSpace(nativeInstance, dataSpace)
+    }
+    private external fun nativeSetSurfaceDataSpace(instance: Long, dataSpace: Int)
+
     fun command(cmd: Array<String>) {
         checkCreated()
         nativeCommand(nativeInstance, cmd)

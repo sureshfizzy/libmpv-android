@@ -16,6 +16,10 @@ fi
 
 unset CC CXX # meson wants these unset
 
+for patch in ../../patches/mpv/*.patch; do
+	[ -f "$patch" ] && patch -p1 -N < "$patch" || true
+done
+
 meson setup $build --cross-file "$prefix_dir"/crossfile.txt \
 	--default-library shared \
 	-Diconv=disabled -Dlua=enabled \

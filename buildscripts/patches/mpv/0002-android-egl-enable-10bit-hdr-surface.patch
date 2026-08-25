@@ -2,10 +2,11 @@ diff --git a/video/out/opengl/context_android.c b/video/out/opengl/context_andro
 index 0a12cf8..f8a2b1c 100644
 --- a/video/out/opengl/context_android.c
 +++ b/video/out/opengl/context_android.c
-@@ -17,12 +17,18 @@
+@@ -17,12 +17,29 @@
 
  #include <EGL/egl.h>
  #include <EGL/eglext.h>
++#include <dlfcn.h>
 +#include <android/native_window.h>
 
  #include "video/out/android_common.h"
@@ -16,19 +17,34 @@ index 0a12cf8..f8a2b1c 100644
 +// AHARDWAREBUFFER_FORMAT_R10G10B10A2_UNORM / WINDOW_FORMAT_RGBA_1010102
 +#define WINDOW_FORMAT_10BIT 43
 +
++// ADATASPACE_V0_SRGB (sRGB transfer + BT.709 primaries + full range)
++#define DATASPACE_V0_SRGB 142671872
++
++typedef int (*pfn_ANativeWindow_setBuffersDataSpace)(ANativeWindow*, int);
++
++static void set_surface_dataspace(ANativeWindow *window, int dataspace) {
++    static pfn_ANativeWindow_setBuffersDataSpace fn = NULL;
++    static int resolved = 0;
++    if (!resolved) { resolved = 1; fn = dlsym(RTLD_DEFAULT, "ANativeWindow_setBuffersDataSpace"); }
++    if (fn)
++        fn(window, dataspace);
++}
++
  struct priv {
      struct GL gl;
      EGLDisplay egl_display;
-@@ -72,7 +78,7 @@ static bool android_init(struct ra_ctx *ctx)
+@@ -72,7 +89,10 @@ static bool android_init(struct ra_ctx *ctx)
      ANativeWindow *native_window = vo_android_native_window(ctx->vo);
      EGLint format;
      eglGetConfigAttrib(p->egl_display, config, EGL_NATIVE_VISUAL_ID, &format);
 -    ANativeWindow_setBuffersGeometry(native_window, 0, 0, format);
 +    ANativeWindow_setBuffersGeometry(native_window, 0, 0, 0);
++    // Default to sRGB so the compositor does not HDR-boost SDR content.
++    set_surface_dataspace(native_window, DATASPACE_V0_SRGB);
 
      p->egl_surface = eglCreateWindowSurface(p->egl_display, config,
                                      (EGLNativeWindowType)native_window, NULL);
-@@ -112,8 +118,9 @@ static bool android_reconfig(struct ra_ctx *ctx)
+@@ -112,8 +132,9 @@ static bool android_reconfig(struct ra_ctx *ctx)
      // Update window geometry to prevent screen tearing
      ANativeWindow *native_window = vo_android_native_window(ctx->vo);
      if (native_window) {

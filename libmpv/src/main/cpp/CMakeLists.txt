@@ -34,4 +34,4 @@ set_target_properties(
 
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/../../../../buildscripts/prefix/${ANDROID_ABI}/include )
 
-target_link_libraries( player mpv avcodec log )
+target_link_libraries( player mpv avcodec log android )
