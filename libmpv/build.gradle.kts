@@ -55,7 +55,7 @@ mavenPublishing {
     coordinates(
         groupId = "org.jellycine.mpv",
         artifactId = "libmpv",
-        version = "1.0.3"
+        version = "1.0.4"
     )
 
     pom {
