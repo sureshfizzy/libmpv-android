@@ -1,0 +1,166 @@
+diff --git a/meson.build b/meson.build
+index fb10be5..57163e3 100644
+--- a/meson.build
++++ b/meson.build
+@@ -1318,6 +1318,12 @@ if features['vulkan'] and features['android']
+     sources += files('video/out/vulkan/context_android.c')
+ endif
+ 
++ios_vk = features['vulkan'] and darwin and host_machine.subsystem().startswith('ios')
++features += {'ios-vk': ios_vk}
++if ios_vk
++    sources += files('video/out/vulkan/context_ios.m')
++endif
++
+ if features['vulkan'] and features['wayland']
+     sources += files('video/out/vulkan/context_wayland.c')
+ endif
+diff --git a/video/out/gpu/context.c b/video/out/gpu/context.c
+index 60c0641..46827e9 100644
+--- a/video/out/gpu/context.c
++++ b/video/out/gpu/context.c
+@@ -50,6 +50,7 @@ extern const struct ra_ctx_fns ra_ctx_vulkan_xlib;
+ extern const struct ra_ctx_fns ra_ctx_vulkan_android;
+ extern const struct ra_ctx_fns ra_ctx_vulkan_display;
+ extern const struct ra_ctx_fns ra_ctx_vulkan_mac;
++extern const struct ra_ctx_fns ra_ctx_vulkan_ios;
+ 
+ /* Direct3D 11 */
+ extern const struct ra_ctx_fns ra_ctx_d3d11;
+@@ -129,6 +130,9 @@ static const struct ra_ctx_fns *const contexts[] = {
+ #if HAVE_ANDROID
+     &ra_ctx_vulkan_android,
+ #endif
++#if HAVE_IOS_VK
++    &ra_ctx_vulkan_ios,
++#endif
+ #if HAVE_VK_KHR_DISPLAY
+     &ra_ctx_vulkan_display,
+ #endif
+diff --git a/video/out/vulkan/context_ios.m b/video/out/vulkan/context_ios.m
+new file mode 100644
+index 0000000..6066d89
+--- /dev/null
++++ b/video/out/vulkan/context_ios.m
+@@ -0,0 +1,121 @@
++/*
++ * This file is part of mpv.
++ *
++ * mpv is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * mpv is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with mpv.  If not, see <http://www.gnu.org/licenses/>.
++ */
++
++#import <QuartzCore/CAMetalLayer.h>
++
++#include <vulkan/vulkan.h>
++#include <vulkan/vulkan_metal.h>
++
++#include "options/m_config.h"
++#include "video/out/vo.h"
++#include "common.h"
++#include "context.h"
++#include "utils.h"
++
++struct priv {
++    struct mpvk_ctx vk;
++    CAMetalLayer *layer;
++};
++
++static CAMetalLayer *ios_layer(struct ra_ctx *ctx)
++{
++    int64_t wid = ctx->vo->opts->WinID;
++    if (wid == 0 || wid == -1)
++        return nil;
++    return (__bridge CAMetalLayer *)(void *)(intptr_t)wid;
++}
++
++static void ios_vk_uninit(struct ra_ctx *ctx)
++{
++    struct priv *p = ctx->priv;
++    ra_vk_ctx_uninit(ctx);
++    mpvk_uninit(&p->vk);
++    p->layer = nil;
++}
++
++static bool ios_vk_init(struct ra_ctx *ctx)
++{
++    struct priv *p = ctx->priv = talloc_zero(ctx, struct priv);
++    struct mpvk_ctx *vk = &p->vk;
++    int msgl = ctx->opts.probing ? MSGL_V : MSGL_ERR;
++
++    p->layer = ios_layer(ctx);
++    if (!p->layer) {
++        MP_MSG(ctx, msgl, "iosvk: --wid must be a CAMetalLayer pointer\n");
++        goto fail;
++    }
++
++    if (@available(iOS 16.0, *))
++        p->layer.wantsExtendedDynamicRangeContent = YES;
++
++    if (!mpvk_init(vk, ctx, VK_EXT_METAL_SURFACE_EXTENSION_NAME))
++        goto fail;
++
++    VkMetalSurfaceCreateInfoEXT info = {
++        .sType = VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT,
++        .pLayer = (__bridge const CAMetalLayer *)p->layer,
++    };
++
++    struct ra_ctx_params params = {0};
++
++    VkInstance inst = vk->vkinst->instance;
++    VkResult res = vkCreateMetalSurfaceEXT(inst, &info, NULL, &vk->surface);
++    if (res != VK_SUCCESS) {
++        MP_MSG(ctx, msgl, "Failed creating Metal surface\n");
++        goto fail;
++    }
++
++    if (!ra_vk_ctx_init(ctx, vk, params, VK_PRESENT_MODE_FIFO_KHR))
++        goto fail;
++
++    return true;
++fail:
++    ios_vk_uninit(ctx);
++    return false;
++}
++
++static bool ios_vk_resize(struct ra_ctx *ctx)
++{
++    struct priv *p = ctx->priv;
++    CGSize size = p->layer.drawableSize;
++    if (size.width < 1 || size.height < 1) {
++        CGFloat scale = p->layer.contentsScale;
++        size = CGSizeMake(p->layer.bounds.size.width * scale,
++                          p->layer.bounds.size.height * scale);
++    }
++    return ra_vk_ctx_resize(ctx, (int)size.width, (int)size.height);
++}
++
++static bool ios_vk_reconfig(struct ra_ctx *ctx)
++{
++    return ios_vk_resize(ctx);
++}
++
++static int ios_vk_control(struct ra_ctx *ctx, int *events, int request, void *arg)
++{
++    return VO_NOTIMPL;
++}
++
++const struct ra_ctx_fns ra_ctx_vulkan_ios = {
++    .type           = "vulkan",
++    .name           = "iosvk",
++    .description    = "iOS/Vulkan (via Metal)",
++    .reconfig       = ios_vk_reconfig,
++    .control        = ios_vk_control,
++    .init           = ios_vk_init,
++    .uninit         = ios_vk_uninit,
++};

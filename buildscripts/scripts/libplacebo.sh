@@ -17,7 +17,8 @@ fi
 unset CC CXX CFLAGS CXXFLAGS LDFLAGS
 
 meson setup $build --cross-file "$prefix_dir"/crossfile.txt \
-	-Dvulkan=disabled -Dopengl=enabled -Dgl-proc-addr=enabled -Dshaderc=disabled -Dglslang=disabled -Ddemos=false -Dtests=false
+	-Dvulkan=enabled -Dvk-proc-addr=enabled -Dopengl=enabled -Dgl-proc-addr=enabled -Dshaderc=enabled -Dglslang=disabled -Ddemos=false -Dtests=false
 
 ninja -C $build -j$cores
 DESTDIR="$prefix_dir" ninja -C $build install
+

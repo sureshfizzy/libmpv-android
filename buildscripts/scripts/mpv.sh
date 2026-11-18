@@ -16,10 +16,14 @@ fi
 
 unset CC CXX CFLAGS CXXFLAGS LDFLAGS
 
+for patch in ../../patches/mpv/*.patch; do
+	[ -f "$patch" ] && patch -p1 -N < "$patch" || true
+done
+
 meson setup $build --cross-file "$prefix_dir"/crossfile.txt \
 	--default-library static -Dlibmpv=true -Dcplayer=false -Dtests=false -Dmanpage-build=disabled \
 	-Dlua=enabled -Diconv=enabled -Dgl=enabled -Dios-gl=disabled -Dvideotoolbox-gl=disabled -Davfoundation=disabled \
-	-Daudiounit=enabled -Dcoreaudio=disabled -Dvulkan=disabled -Dswift-build=disabled
+	-Daudiounit=enabled -Dcoreaudio=disabled -Dvulkan=enabled -Dvideotoolbox-pl=enabled -Dswift-build=disabled
 
 ninja -C $build -j$cores
 DESTDIR="$prefix_dir" ninja -C $build install

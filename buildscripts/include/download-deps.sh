@@ -41,6 +41,15 @@ fi
 
 [ ! -d libplacebo ] && git clone --depth 1 --branch v$v_libplacebo --recurse-submodules https://code.videolan.org/videolan/libplacebo.git libplacebo
 
+# shaderc
+if [ ! -d shaderc ]; then
+	git clone --depth 1 --branch v$v_shaderc https://github.com/google/shaderc.git shaderc
+	(cd shaderc && python3 utils/git-sync-deps)
+fi
+
+# moltenvk
+[ ! -d moltenvk ] && git clone --depth 1 --branch v$v_moltenvk https://github.com/KhronosGroup/MoltenVK.git moltenvk
+
 # mpv
 [ ! -d mpv ] && git clone --depth 1 --branch v$v_mpv https://github.com/mpv-player/mpv.git mpv
 

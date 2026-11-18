@@ -2,8 +2,6 @@
 
 An iOS port of [libmpv-android](https://github.com/jarnedemeulemeester/libmpv-android). Builds [mpv](https://mpv.io) and its dependencies as static libraries and packages them as `libmpv-ios.xcframework`.
 
-Experimental. See the limitations in [buildscripts/README.md](buildscripts/README.md).
-
 ## Building from source
 
 Take a look at [README.md](buildscripts/README.md) inside the `buildscripts` directory.
