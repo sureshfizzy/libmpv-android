@@ -12,25 +12,21 @@ else
 	exit 255
 fi
 
-# Building seperately from source tree is not supported, this means we are forced to always clean
 $0 clean
 
-# LUA_T= and LUAC_T= to disable building lua & luac
-# -Dgetlocaledecpoint()=('.') fixes bionic missing decimal_point in localeconv
-make CC="$CC" AR="$AR rc" RANLIB="$RANLIB" \
-	MYCFLAGS="-fPIC -Dgetlocaledecpoint\(\)=\(\'.\'\)" \
-	PLAT=linux LUA_T= LUAC_T= -j$cores
+sed -i "" "s/system(\([^)]*\))/(-1)/g" src/loslib.c
 
-# TO_BIN=/dev/null disables installing lua & luac
-make INSTALL=${INSTALL:-install} INSTALL_TOP="$prefix_dir" TO_BIN=/dev/null install
+make CC="$CC" AR="$AR rc" RANLIB="$RANLIB" MYCFLAGS="$CFLAGS" \
+	PLAT=macosx LUA_T= LUAC_T= -j$cores
 
-# make pc only generates a partial pkg-config file because ????
+make INSTALL_TOP="$prefix_dir" INSTALL_EXEC=true TO_BIN= install
+
 mkdir -p $prefix_dir/lib/pkgconfig
 make pc >$prefix_dir/lib/pkgconfig/lua.pc
-cat >>$prefix_dir/lib/pkgconfig/lua.pc <<'EOF'
+cat >>$prefix_dir/lib/pkgconfig/lua.pc <<'PC'
 Name: Lua
 Description:
 Version: ${version}
 Libs: -L${libdir} -llua
 Cflags: -I${includedir}
-EOF
+PC

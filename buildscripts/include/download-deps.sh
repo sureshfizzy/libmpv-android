@@ -2,8 +2,6 @@
 
 . ./include/depinfo.sh
 
-[ -z "$WGET" ] && WGET=wget
-
 mkdir -p deps && cd deps
 
 # mbedtls
@@ -27,15 +25,9 @@ mkdir -p deps && cd deps
 # libunibreak
 if [ ! -d libunibreak ]; then
 	mkdir libunibreak
-	$WGET https://github.com/adah1972/libunibreak/releases/download/libunibreak_${v_libunibreak}/libunibreak-${v_libunibreak//_/.}.tar.gz -O - | \
+	curl -fsSL https://github.com/adah1972/libunibreak/releases/download/libunibreak_${v_libunibreak}/libunibreak-${v_libunibreak//_/.}.tar.gz | \
 		tar -xz -C libunibreak --strip-components=1
 fi
-
-# libxml2
-[ ! -d libxml2 ] && git clone --depth 1 --branch v$v_libxml2 https://gitlab.gnome.org/GNOME/libxml2.git libxml2
-
-# fontconfig
-[ ! -d fontconfig ] && git clone --depth 1 --branch $v_fontconfig https://gitlab.freedesktop.org/fontconfig/fontconfig.git fontconfig
 
 # libass
 [ ! -d libass ] && git clone --depth 1 --branch $v_libass https://github.com/libass/libass.git libass
@@ -43,12 +35,9 @@ fi
 # lua
 if [ ! -d lua ]; then
 	mkdir lua
-	$WGET http://www.lua.org/ftp/lua-$v_lua.tar.gz -O - | \
+	curl -fsSL http://www.lua.org/ftp/lua-$v_lua.tar.gz | \
 		tar -xz -C lua --strip-components=1
 fi
-
-# shaderc (uses NDK bundled source)
-mkdir -p shaderc
 
 [ ! -d libplacebo ] && git clone --depth 1 --branch v$v_libplacebo --recurse-submodules https://code.videolan.org/videolan/libplacebo.git libplacebo
 

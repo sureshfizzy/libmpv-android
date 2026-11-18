@@ -3,24 +3,26 @@
 . ../../include/depinfo.sh
 . ../../include/path.sh
 
+build=_build$ios_suffix
+
 if [ "$1" == "build" ]; then
 	true
 elif [ "$1" == "clean" ]; then
-	rm -rf _build$ndk_suffix
+	rm -rf $build
 	exit 0
 else
 	exit 255
 fi
 
-[ -f configure ] || ./autogen.sh
+[ -f Makefile.in ] || ./autogen.sh
 
-mkdir -p _build$ndk_suffix
-cd _build$ndk_suffix
+mkdir -p $build
+cd $build
 
 ../configure \
-	--host=$ndk_triple --with-pic \
+	--host=${arch/arm64/aarch64}-apple-darwin --with-pic \
 	--enable-static --disable-shared \
-	--enable-libunibreak --enable-fontconfig
+	--enable-libunibreak --disable-fontconfig --enable-coretext --disable-asm
 
 make -j$cores
 make DESTDIR="$prefix_dir" install

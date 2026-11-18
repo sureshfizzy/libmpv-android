@@ -3,7 +3,7 @@
 . ../../include/depinfo.sh
 . ../../include/path.sh
 
-build=_build$ndk_suffix
+build=_build$ios_suffix
 
 if [ "$1" == "build" ]; then
 	true
@@ -14,11 +14,13 @@ else
 	exit 255
 fi
 
+[ -f configure ] || ./autogen.sh
+
 mkdir -p $build
 cd $build
 
 ../configure \
-	--host=$ndk_triple --with-pic \
+	--host=${arch/arm64/aarch64}-apple-darwin --with-pic \
 	--enable-static --disable-shared
 
 make -j$cores

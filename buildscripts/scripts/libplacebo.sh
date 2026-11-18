@@ -3,7 +3,7 @@
 . ../../include/depinfo.sh
 . ../../include/path.sh
 
-build=_build$ndk_suffix
+build=_build$ios_suffix
 
 if [ "$1" == "build" ]; then
 	true
@@ -14,13 +14,10 @@ else
 	exit 255
 fi
 
-unset CC CXX
+unset CC CXX CFLAGS CXXFLAGS LDFLAGS
+
 meson setup $build --cross-file "$prefix_dir"/crossfile.txt \
-	-Dvulkan=enabled -Dopengl=enabled -Dshaderc=enabled -Ddemos=false
+	-Dvulkan=disabled -Dopengl=enabled -Dgl-proc-addr=enabled -Dshaderc=disabled -Dglslang=disabled -Ddemos=false -Dtests=false
 
 ninja -C $build -j$cores
 DESTDIR="$prefix_dir" ninja -C $build install
-
-# add missing libraries for static linking
-# this isn't "-lstdc++" due to a meson bug: https://github.com/mesonbuild/meson/issues/11300
-${SED:-sed} '/^Libs:/ s|$| -lc++ -lshaderc_combined|' "$prefix_dir/lib/pkgconfig/libplacebo.pc" -i

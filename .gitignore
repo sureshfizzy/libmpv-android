@@ -1,13 +1,1 @@
-.gdb_history
-bin
-gen
-jniLibs
-obj
-.gradle
-.idea
-.cxx
-**/*.iml
-build
-local.properties
-gradle.properties
 *~

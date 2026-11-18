@@ -12,7 +12,7 @@ else
 	exit 255
 fi
 
-$0 clean # separate building not supported, always clean
+$0 clean
 
-make -j$cores no_test
+make -j$cores no_test CC="$CC" AR="$AR" CFLAGS="-O2 $CFLAGS"
 make DESTDIR="$prefix_dir" install

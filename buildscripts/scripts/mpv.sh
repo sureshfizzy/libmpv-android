@@ -3,7 +3,7 @@
 . ../../include/depinfo.sh
 . ../../include/path.sh
 
-build=_build$ndk_suffix
+build=_build$ios_suffix
 
 if [ "$1" == "build" ]; then
 	true
@@ -14,20 +14,12 @@ else
 	exit 255
 fi
 
-unset CC CXX # meson wants these unset
-
-for patch in ../../patches/mpv/*.patch; do
-	[ -f "$patch" ] && patch -p1 -N < "$patch" || true
-done
+unset CC CXX CFLAGS CXXFLAGS LDFLAGS
 
 meson setup $build --cross-file "$prefix_dir"/crossfile.txt \
-	--default-library shared \
-	-Diconv=disabled -Dlua=enabled \
-	-Dlibmpv=true -Dcplayer=false \
-	-Degl-android=enabled \
-	-Dmanpage-build=disabled
+	--default-library static -Dlibmpv=true -Dcplayer=false -Dtests=false -Dmanpage-build=disabled \
+	-Dlua=enabled -Diconv=enabled -Dgl=enabled -Dios-gl=disabled -Dvideotoolbox-gl=disabled -Davfoundation=disabled \
+	-Daudiounit=enabled -Dcoreaudio=disabled -Dvulkan=disabled -Dswift-build=disabled
 
 ninja -C $build -j$cores
 DESTDIR="$prefix_dir" ninja -C $build install
-
-ln -sf "$prefix_dir"/lib/libmpv.so "$native_dir"

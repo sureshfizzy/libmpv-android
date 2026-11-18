@@ -1,7 +1,0 @@
-[versions]
-android-plugin = "9.3.2"
-maven-publish = "0.37.0"
-
-[plugins]
-android-library = { id = "com.android.library", version.ref = "android-plugin" }
-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "maven-publish" }
