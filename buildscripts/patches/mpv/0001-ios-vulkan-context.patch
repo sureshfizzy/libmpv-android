@@ -42,7 +42,7 @@ new file mode 100644
 index 0000000..6066d89
 --- /dev/null
 +++ b/video/out/vulkan/context_ios.m
-@@ -0,0 +1,152 @@
+@@ -0,0 +1,183 @@
 +/*
 + * This file is part of mpv.
 + *
@@ -61,6 +61,7 @@ index 0000000..6066d89
 + */
 +
 +#import <QuartzCore/CAMetalLayer.h>
++#import <UIKit/UIKit.h>
 +
 +#include <vulkan/vulkan.h>
 +#include <vulkan/vulkan_metal.h>
@@ -85,6 +86,34 @@ index 0000000..6066d89
 +    return (__bridge CAMetalLayer *)(void *)(intptr_t)wid;
 +}
 +
++static float ios_edr_headroom(void)
++{
++    if (@available(iOS 16.0, *)) {
++        UIScreen *screen = UIScreen.mainScreen;
++        CGFloat h = screen.currentEDRHeadroom;
++        if (h < 1.0)
++            h = screen.potentialEDRHeadroom;
++        if (h > 1.0)
++            return h;
++    }
++    return 1.0;
++}
++
++static pl_color_space_t ios_preferred_csp(struct ra_ctx *ctx)
++{
++    float headroom = ios_edr_headroom();
++    if (headroom <= 1.0)
++        return (pl_color_space_t){0};
++    return (pl_color_space_t){
++        .primaries = PL_COLOR_PRIM_DISPLAY_P3,
++        .transfer = PL_COLOR_TRC_PQ,
++        .hdr = {
++            .prim = *pl_raw_primaries_get(PL_COLOR_PRIM_DISPLAY_P3),
++            .max_luma = headroom * PL_COLOR_SDR_WHITE,
++        },
++    };
++}
++
 +static void ios_update_edr(struct ra_ctx *ctx)
 +{
 +    struct priv *p = ctx->priv;
@@ -101,7 +130,7 @@ index 0000000..6066d89
 +        if (kind == 1) {
 +            p->layer.EDRMetadata =
 +                [CAEDRMetadata HDR10MetadataWithMinLuminance:0.005
-+                                                maxLuminance:1000.0
++                                                maxLuminance:ios_edr_headroom() * 203.0
 +                                          opticalOutputScale:203.0];
 +        } else if (kind == 2) {
 +            p->layer.EDRMetadata = CAEDRMetadata.HLGMetadata;
@@ -142,7 +171,9 @@ index 0000000..6066d89
 +        .pLayer = (__bridge const CAMetalLayer *)p->layer,
 +    };
 +
-+    struct ra_ctx_params params = {0};
++    struct ra_ctx_params params = {
++        .preferred_csp = ios_preferred_csp,
++    };
 +
 +    VkInstance inst = vk->vkinst->instance;
 +    VkResult res = vkCreateMetalSurfaceEXT(inst, &info, NULL, &vk->surface);
