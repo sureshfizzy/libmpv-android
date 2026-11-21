@@ -17,7 +17,9 @@ fi
 unset CC CXX CFLAGS CXXFLAGS LDFLAGS
 
 for patch in ../../patches/mpv/*.patch; do
-	[ -f "$patch" ] && patch -p1 -N < "$patch" || true
+	[ -f "$patch" ] || continue
+	git apply -R --check "$patch" >/dev/null 2>&1 && continue
+	git apply "$patch"
 done
 
 meson setup $build --cross-file "$prefix_dir"/crossfile.txt \
