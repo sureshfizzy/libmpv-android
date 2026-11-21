@@ -24,7 +24,8 @@ cd $build
 	--enable-videotoolbox --enable-audiotoolbox --enable-mbedtls --enable-libdav1d \
 	--enable-static --disable-shared --enable-pic \
 	--enable-gpl --enable-version3 \
-	--disable-{stripping,doc,programs,muxers,encoders,devices,filters,debug}
+	--disable-{stripping,doc,programs,muxers,encoders,devices,filters,debug} \
+	--enable-filter=aformat,aresample,anull,pan,loudnorm,dynaudnorm,acompressor,volume,yadif,bwdif
 
 make -j$cores
 make DESTDIR="$prefix_dir" install
